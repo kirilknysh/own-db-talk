@@ -1,9 +1,8 @@
 {
-  "name": "reveal.js",
-  "version": "3.6.0",
-  "description": "The HTML Presentation Framework",
-  "homepage": "http://revealjs.com",
-  "subdomain": "revealjs",
+  "name": "own-db-talk",
+  "version": "1.0.0",
+  "description": "How to build your own database (and never ever repeat this mistake)",
+  "homepage": "https://github.com/kirilknysh/own-db-talk",
   "main": "js/reveal.js",
   "scripts": {
     "test": "grunt test",
@@ -11,13 +10,13 @@
     "build": "grunt"
   },
   "author": {
-    "name": "Hakim El Hattab",
-    "email": "hakim.elhattab@gmail.com",
-    "web": "http://hakim.se"
+    "name": "Kiril Knysh",
+    "email": "k.knysh@gmail.com",
+    "web": "https://kirilknysh.github.io/"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/hakimel/reveal.js.git"
+    "url": "git@github.com:kirilknysh/own-db-talk.git"
   },
   "engines": {
     "node": ">=4.0.0"
