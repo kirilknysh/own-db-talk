@@ -35,17 +35,21 @@
           </aside>
         </section>
         <section>
-          <h3><span class="emphasis">What</span></h3>
-          <ul>
-            <li class="fragment">store <s>JSON</s> text</li>
-            <li class="fragment">stream <s>data</s> text to disk</li>
-            <li class="fragment">versioning</li>
-          </ul>
-          <h3><span class="emphasis fragment">How</span></h3>
-          <ul>
-            <li class="fragment">human readable</li>
-            <li class="fragment">collections tree</li>
-          </ul>
+          <p>
+            <h3><span class="emphasis">What</span></h3>
+            <ul>
+              <li class="fragment">store <s>JSON</s> text</li>
+              <li class="fragment">stream <s>data</s> text to disk</li>
+              <li class="fragment">versioning</li>
+            </ul>
+          </p>
+          <p>
+            <h3><span class="emphasis fragment">How</span></h3>
+            <ul>
+              <li class="fragment">human readable</li>
+              <li class="fragment">collections tree</li>
+            </ul>
+          </p>
         </section>
         <section>
           <section>
@@ -106,33 +110,155 @@
         </section>
         <section>
           <h3><span class="emphasis">Timeline</span></h3>
-          <div class="timeline" style="padding: 0 1em; height: 40vh;">
-            <div class="timeline-row">
-              <div class="timeline-row-title">database</div>
-              <div id="timeline-db-events" class="timeline-events-container">
-                <div class="timeline-events-axis"></div>
-              </div>
-            </div>
-            <div class="timeline-row">
-              <div class="timeline-row-title">fs helpers</div>
-              <div id="timeline-fs-helpers-events" class="timeline-events-container">
-                <div class="timeline-events-axis"></div>
-              </div>
-            </div>
-          </div>
+          <div class="timeline" data-timeline="full" style="padding: 0 1em; height: 40vh;"></div>
+        </section>
+        <section>
+          <h3>Database <span class="emphasis">launch</span></h3>
+          <div class="timeline" data-timeline="step-0" style="padding: 0 1em; margin-bottom: 1em;"></div>
+          <ul>
+            <li>base implementation (file system queue)</li>
+            <li>set initial content</li>
+            <li>versioning (similar to <a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API">IndexedDB</a>)</li>
+            <li>async initialize (async version change)</li>
+            <li>add Streams</li>
+          </ul>
+        </section>
+        <section>
+          <h3><span class="emphasis">fs helpers</span> branching</h3>
+          <div class="timeline" data-timeline="step-1" style="padding: 0 1em; margin-bottom: 1em;"></div>
+          <ul>
+            <li>extract fs helpers</li>
+          </ul>
+        </section>
+        <section>
+          <h3>File system queue <span class="emphasis">memory leak</span></h3>
+          <div class="timeline" data-timeline="step-2" style="padding: 0 1em; margin-bottom: 1em;"></div>
+          <pre class="fragment current-visible" style="width: 100%; position: absolute;"><code data-trim data-noescape>
+            class Database {
+              constructor() {
+                this.fileSystemQueue[fileName] = Promise.resolve();
+              }
+
+              read() {
+                this.fileSystemQueue[fileName] = this.fileSystemQueue[fileName].then(() => {
+                  // read content of fileName
+                });
+
+                return this.fileSystemQueue[fileName];
+              }
+            }
+          </code></pre>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+            class Database {
+              constructor() {
+                this.fileSystemQueue[fileName] = Promise.resolve();
+              }
+
+              read() {
+                const promise = this.fileSystemQueue[fileName].then(() => {
+                  // read content of fileName
+                });
+
+                this.fileSystemQueue[fileName] = promise.then(noop, noop);
+
+                return promise;
+              }
+            }
+          </code></pre>
+        </section>
+        <section>
+          <h3>Atomicity (<span class="emphasis">A</span>CID)</h3>
+          <div class="timeline" data-timeline="step-3" style="padding: 0 1em; margin-bottom: 1em;"></div>
+          <pre class="fragment" style="width: 100%; position: absolute;"><code data-trim data-noescape>
+            const db = new Database();
+
+            db.read().then((data) => { // { prop: 0 }
+              data.prop += 1;
+              return db.write(data);   // { prop: 1 }
+            });
+            db.read().then((data) => { // { prop: 1 }
+              data.prop -= 5;
+              return db.write(data);   // { prop: -4 }
+            });
+
+            db.read(); <span class="fragment">// { prop: -5 }</span>
+          </code></pre>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+            const db = new Database();
+
+            db.atomic((atomicDb) => {
+              return atomicDb.read().then(() => { // { prop: 0 }
+                data.prop += 1;
+                return atomicDb.write(data);      // { prop: 1 }
+              });
+            });
+            db.atomic((atomicDb) => {
+              return atomicDb.read().then(() => { // { prop: 1 }
+                data.prop -= 5;
+                return atomicDb.write(data);      // { prop: -4 }
+              });
+            });
+
+            db.read();                            // { prop: -5 }
+          </code></pre>
+        </section>
+        <section>
+          <h3>Sub-folders support (AC<span class="emphasis">I</span>D)</h3>
+          <div class="timeline" data-timeline="step-4" style="padding: 0 1em; margin-bottom: 1em;"></div>
+          <pre class="fragment current-visible" style="width: 100%; position: absolute;"><code data-trim data-noescape class="nohighlight">
+            data
+              |
+              |-- base-0
+              |     |
+              |     |-- collection-0.json
+              |     |-- collection-1.json
+              |
+              |-- base-1
+                    |
+                    |-- collection-1-0.json
+          </code></pre>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape class="nohighlight">
+              data
+                |
+                |-- base-0
+                |     |
+                |     |-- base-0-0
+                |     |     |
+                |     |     |-- collection-0-0-0.json
+                |     |     |-- collection-0-0-1.json
+                |     |
+                |     |-- base-0-1
+                |           |
+                |           |-- collection-0-1.json
+                |
+                |-- base-1
+                      |
+                      |-- collection-1-0.json
+            </code></pre>
+        </section>
+        <section>
+          <h3>Atomic write (ACI<span class="emphasis">D</span>)</h3>
+          <div class="timeline" data-timeline="step-5" style="padding: 0 1em; margin-bottom: 1em;"></div>
         </section>
         <section>
           <h3><span class="emphasis">Timeline</span></h3>
+          step-0:
           10 Oct 2016 - base (including fs queue)
           17 Oct 2016 - initial content ('' for collection, {} for JSON db)
           28 Oct 2016 - versioning
-          01 Nov 2916 - add DatabaseStream
+          01 Nov 2016 - add DatabaseStream
           09 Nov 2016 - async init (async version change)
+          step-1
           17 Nov 2016 - extract fs helpers
+          step-2
           30 Nov 2016 - memory leak; clean queue
+          step-3
           15 Dec 2016 - add atomic
+          step-4
           17 Feb 2017 - sub-folders support
+          step-5
           13 Jun 2017 - fs durability
+
           31 Oct 2017 - batch collection remove
           05 Jan 2018 - new dirs fsync
           25 May 2018 - Streams fsync
@@ -142,6 +268,7 @@
 			</div>
 		</div>
 
+    <script src="lib/js/timelines.js" async defer></script>
 		<script src="lib/js/head.min.js"></script>
 		<script src="js/reveal.js"></script>
 
@@ -158,103 +285,6 @@
 					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
 				]
 			});
-    </script>
-    <script>
-      const leftDate = new Date('2016-09-01T00:00:00').getTime();
-      const rightDate = new Date().getTime();
-      const dateWidth = rightDate - leftDate;
-      const type = {
-        ROCKET: 'ROCKET',
-        POOP: 'POOP',
-      };
-      const events = {
-        db: {
-          data: [
-            { date: new Date('2016-09-30T00:00:00').getTime(), type: type.ROCKET },
-            { date: new Date('2016-10-10T00:00:00').getTime(), type: type.ROCKET },
-            { date: new Date('2016-10-17T00:00:00').getTime(), type: type.ROCKET },
-            { date: new Date('2016-10-28T00:00:00').getTime(), type: type.ROCKET },
-            { date: new Date('2016-11-01T00:00:00').getTime(), type: type.ROCKET },
-            { date: new Date('2016-11-09T00:00:00').getTime(), type: type.ROCKET },
-            { date: new Date('2016-11-30T00:00:00').getTime(), type: type.POOP },
-            { date: new Date('2016-12-15T00:00:00').getTime(), type: type.POOP },
-            { date: new Date('2017-02-17T00:00:00').getTime(), type: type.ROCKET },
-            { date: new Date('2017-10-31T00:00:00').getTime(), type: type.POOP },
-            { date: new Date('2018-05-25T00:00:00').getTime(), type: type.POOP },
-            { date: new Date('2018-06-26T00:00:00').getTime(), type: type.ROCKET },
-          ],
-          container: document.querySelector('#timeline-db-events'),
-          containerWidth: 0,
-          fragment: document.createDocumentFragment(),
-        },
-        fsHelpers: {
-          data: [
-            { date: new Date('2016-11-17T00:00:00').getTime(), type: type.ROCKET },
-            { date: new Date('2017-06-13T00:00:00').getTime(), type: type.POOP },
-            { date: new Date('2018-01-05T00:00:00').getTime(), type: type.POOP },
-            { date: new Date('2018-07-25T00:00:00').getTime(), type: type.POOP },
-          ],
-          container: document.querySelector('#timeline-fs-helpers-events'),
-          containerWidth: 0,
-          fragment: document.createDocumentFragment(),
-        },
-      };
-
-      function getClasses(eventType) {
-        const classes = ['-event'];
-
-        switch (eventType) {
-          case type.ROCKET:
-            classes.push('-fly-away');
-            break;
-          case type.POOP:
-            classes.push('-modesty');
-            break;
-        }
-
-        return classes;
-      }
-
-      function getText(eventType) {
-        switch (eventType) {
-          case type.POOP:
-            return '💩';
-          default:
-            return '🚀';
-        }
-      }
-
-      function getLeftOffset(eventDate) {
-        const left = eventDate - leftDate;
-        const percent = ~~((left / dateWidth) * 100);
-        return `${percent}%`;
-      }
-
-      function getAnimationDelay(eventType) {
-        switch (eventType) {
-          case type.ROCKET:
-            return `${~~(Math.random() * 1000)}ms`;
-          default:
-            return '0ms';
-        }
-      }
-
-      function render(config) {
-        config.data.reduce((fragment, event) => {
-          const node = document.createElement('div');
-          node.classList.add(...getClasses(event.type));
-          node.innerText = getText(event.type);
-          node.style.left = getLeftOffset(event.date);
-          node.style.animationDelay = getAnimationDelay(event.type);
-          fragment.appendChild(node);
-
-          return fragment;
-        }, config.fragment);
-        config.container.appendChild(config.fragment);
-      }
-
-      render(events.db);
-      render(events.fsHelpers);
     </script>
 	</body>
 </html>
