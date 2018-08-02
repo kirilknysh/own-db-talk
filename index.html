@@ -38,8 +38,8 @@
           <p>
             <h3><span class="emphasis">What</span></h3>
             <ul>
-              <li class="fragment">store <s>JSON</s> text</li>
-              <li class="fragment">stream <s>data</s> text to disk</li>
+              <li class="fragment">store <span class="strikeout">JSON</span> text</li>
+              <li class="fragment">stream <span class="strikeout">data</span> text to disk</li>
               <li class="fragment">versioning</li>
             </ul>
           </p>
@@ -50,6 +50,11 @@
               <li class="fragment">collections tree</li>
             </ul>
           </p>
+          <aside class="notes">
+            <div>What did we want? How did we want it?</div>
+            <div>human readable - for debug purposes, easy to modify, easy to analyze issues</div>
+            <div>tree - different collection may be stored in different locations (flash, hdd, ...)</div>
+          </aside>
         </section>
         <section>
           <section>
@@ -57,6 +62,9 @@
             <div class="fragment">if you have <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a> (JS)</div>
             <div class="fragment"><a href="https://msdn.microsoft.com/en-us/library/dd321424(v=vs.110).aspx">Task&lt;T&gt;</a> (C#)</div>
             <div class="fragment"><a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html">CompletableFuture&lt;T&gt;</a></span> (Java)</div>
+            <aside class="notes">
+              Promise - is a ...
+            </aside>
           </section>
           <section>
             <h3>File system <span class="emphasis">queue</span></h3>
@@ -111,6 +119,9 @@
         <section>
           <h3><span class="emphasis">Timeline</span></h3>
           <div class="timeline" data-timeline="full" style="padding: 0 1em; height: 40vh;"></div>
+          <aside class="notes">
+            A story about how to launch poops on rockets to the blue production sky...
+          </aside>
         </section>
         <section>
           <h3>Database <span class="emphasis">launch</span></h3>
@@ -165,6 +176,9 @@
               }
             }
           </code></pre>
+          <aside class="notes">
+            Not really a leak, just occupied memory. Minor, but first bell.
+          </aside>
         </section>
         <section>
           <h3>Atomicity (<span class="emphasis">A</span>CID)</h3>
@@ -201,6 +215,14 @@
 
             db.read();                            // { prop: -5 }
           </code></pre>
+          <aside class="notes">
+            <div>ACID</div>
+            <div><b>Atomicity</b> - guarantees that each transaction is treated as a single "unit"</div>
+            <div><b>Consistency</b> - ensures that a transaction can only bring the system from one valid state to another</div>
+            <div><b>Isolation</b> - ensures that concurrent execution of transactions leaves the database in the same state that would have been obtained if the transactions were executed sequentially</div>
+            <div><b>Durability</b> - guarantees that once a transaction has been committed, it will remain committed even in the case of a system failure</div>
+            <div>Kind of Atomicity</div>
+          </aside>
         </section>
         <section>
           <h3>Sub-folders support (AC<span class="emphasis">I</span>D)</h3>
@@ -218,27 +240,36 @@
                     |-- collection-1-0.json
           </code></pre>
           <pre class="fragment" style="width: 100%;"><code data-trim data-noescape class="nohighlight">
-              data
-                |
-                |-- base-0
-                |     |
-                |     |-- base-0-0
-                |     |     |
-                |     |     |-- collection-0-0-0.json
-                |     |     |-- collection-0-0-1.json
-                |     |
-                |     |-- base-0-1
-                |           |
-                |           |-- collection-0-1.json
-                |
-                |-- base-1
-                      |
-                      |-- collection-1-0.json
-            </code></pre>
+            data
+              |
+              |-- base-0
+              |     |
+              |     |-- base-0-0
+              |     |     |
+              |     |     |-- collection-0-0-0.json
+              |     |     |-- collection-0-0-1.json
+              |     |
+              |     |-- base-0-1
+              |           |
+              |           |-- collection-0-1.json
+              |
+              |-- base-1
+                    |
+                    |-- collection-1-0.json
+          </code></pre>
+          <aside class="notes">
+            <div>ACID</div>
+            <div><b>Isolation</b> - ensures that concurrent execution of transactions leaves the database in the same state that would have been obtained if the transactions were executed sequentially</div>
+            <div>Kind of Isolation</div>
+          </aside>
         </section>
         <section>
           <h3>Atomic write (ACI<span class="emphasis">D</span>)</h3>
           <div class="timeline" data-timeline="step-5" style="padding: 0 1em; margin-bottom: 1em;"></div>
+          <aside class="notes">
+            <div>ACID</div>
+            <div><b>Durability</b> - guarantees that once a transaction has been committed, it will remain committed even in the case of a system failure</div>
+          </aside>
         </section>
         <section>
           <h3>Performance <span class="emphasis">gap</span></h3>
@@ -267,35 +298,32 @@
         <section>
           <div class="emphasis" style="font-size: 8em;">?</div>
         </section>
-        <section>
-          <h3><span class="emphasis">Timeline</span></h3>
-          step-0:
-          10 Oct 2016 - base (including fs queue)
-          17 Oct 2016 - initial content ('' for collection, {} for JSON db)
-          28 Oct 2016 - versioning
-          01 Nov 2016 - add DatabaseStream
-          09 Nov 2016 - async init (async version change)
-          step-1
-          17 Nov 2016 - extract fs helpers
-          step-2
-          30 Nov 2016 - memory leak; clean queue
-          step-3
-          15 Dec 2016 - add atomic
-          step-4
-          17 Feb 2017 - sub-folders support
-          step-5
-          13 Jun 2017 - fs durability
-          step-6
-          31 Oct 2017 - batch collection remove
-          step-7
-          05 Jan 2018 - new dirs fsync
-          step-8
-          25 May 2018 - Streams fsync
-          step-9
-          26 Jun 2018 - Memoizing
-          step-10
-          25 Jul 2018 - fsync on rename
-        </section>
+        <!-- step-0:
+        10 Oct 2016 - base (including fs queue)
+        17 Oct 2016 - initial content ('' for collection, {} for JSON db)
+        28 Oct 2016 - versioning
+        01 Nov 2016 - add DatabaseStream
+        09 Nov 2016 - async init (async version change)
+        step-1
+        17 Nov 2016 - extract fs helpers
+        step-2
+        30 Nov 2016 - memory leak; clean queue
+        step-3
+        15 Dec 2016 - add atomic
+        step-4
+        17 Feb 2017 - sub-folders support
+        step-5
+        13 Jun 2017 - fs durability
+        step-6
+        31 Oct 2017 - batch collection remove
+        step-7
+        05 Jan 2018 - new dirs fsync
+        step-8
+        25 May 2018 - Streams fsync
+        step-9
+        26 Jun 2018 - Memoizing
+        step-10
+        25 Jul 2018 - fsync on rename -->
 			</div>
 		</div>
 

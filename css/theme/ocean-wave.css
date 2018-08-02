@@ -16,6 +16,10 @@ section.has-light-background, section.has-light-background h1, section.has-light
 .reveal .cons {
   color: #a52626; }
 
+.reveal .strikeout {
+  text-decoration: line-through;
+  text-decoration-color: #30b1ce; }
+
 .reveal .huge {
   font-size: 7em; }
 
