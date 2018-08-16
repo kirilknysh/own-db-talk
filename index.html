@@ -347,14 +347,96 @@
         <section>
           <h3>fsync <span class="emphasis">fsync</span> fsync</h3>
           <div class="timeline" data-timeline="step-8" style="padding: 0 1em; margin-bottom: 1em;"></div>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+            const db = new DatabaseStream('streams');
+
+            db.startWrite('buffer-0')
+              .then(() => {
+                return db.writeChunk('buffer-0', content);
+              }).then(() => {
+                return db.writeChunk('buffer-0', content);
+              }).then(() => {
+                return db.startWrite('buffer-1');
+              }).then(() => {
+                return db.endWrite('buffer-0');
+              });
+          </code></pre>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+            create.stream()->write.stream()->write.stream()->end.stream()
+          </code></pre>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+            create.stream()->write.stream()->write.stream()->fsync.stream()->end.stream()
+          </code></pre>
+          <aside class="notes">
+            Streams - one of the required features.
+          </aside>
         </section>
         <section>
           <h3><span class="emphasis">Memo</span>izing</h3>
           <div class="timeline" data-timeline="step-9" style="padding: 0 1em; margin-bottom: 1em;"></div>
+          <pre class="fragment current-visible" style="width: 100%; position: absolute;"><code data-trim data-noescape>
+            class Database {
+              read() {
+                const promise = this.fileSystemQueue[fileName].then(() => {
+                  return fs.readFile(fileName);
+                });
+
+                this.fileSystemQueue[fileName] = promise.then(noop, noop);
+
+                return promise;
+              }
+            }
+          </code></pre>
+          <pre class="fragment current-visible" style="width: 100%; position: absolute;"><code data-trim data-noescape>
+            class Database {
+              read() {
+                const promise = this.fileSystemQueue[fileName].then(() => {
+                  if (this.memory.filled) {
+                    return _cloneDeep(this.memory.value);
+                  }
+                  return fs.readFile(fileName).then((content) => {
+                    if (!this.memory.filled) {
+                      this.memory.value = content;
+                    }
+                    return content;
+                  });
+                });
+                this.fileSystemQueue[fileName] = promise.then(noop, noop);
+                return promise;
+              }
+            }
+          </code></pre>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+            class Database {
+              write(content) {
+                const promise = this.fileSystemQueue[fileName].then(() => {
+                  return fs.writeFile(fileName, content).then((content) => {
+                    this.memory.value = content;
+                    return content;
+                  });
+                });
+                this.fileSystemQueue[fileName] = promise.then(noop, noop);
+                return promise;
+              }
+            }
+          </code></pre>
+          <aside class="notes">
+            FS operations are slow. Memoizing has been added, but only for small and "hot" collection (to save memory): ballance between memory usage and access performance.
+          </aside>
         </section>
         <section>
           <h3>fsync <span class="emphasis">fsync</span> fsync fsync <span class="emphasis">fsync</span> <span class="emphasis">fsync</span></h3>
           <div class="timeline" data-timeline="step-10" style="padding: 0 1em; margin-bottom: 1em;"></div>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+            open.new()->write.new()->fsync.new()->close.new()->delete()->rename.new()
+          </code></pre>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+            open.new()->write.new()->fsync.new()->close.new()->delete()->rename.new()
+            ->fsync.dir()
+          </code></pre>
+          <aside class="notes">
+            Durability... We were thinking that it works but... Rename is not atomic => have to fsync parent directory after rename
+          </aside>
         </section>
         <section>
           <h3>Instead of <span class="emphasis">epilogue</span></h3>
