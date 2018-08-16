@@ -266,6 +266,26 @@
         <section>
           <h3>Atomic write (ACI<span class="emphasis">D</span>)</h3>
           <div class="timeline" data-timeline="step-5" style="padding: 0 1em; margin-bottom: 1em;"></div>
+          <pre style="width: 100%;"><code data-trim data-noescape>
+            open()->write()->fsync()->close()
+          </code></pre>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+            open.new()->write.new()->fsync.new()->close.new()->delete()->rename.new()
+          </code></pre>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+            open.first()->write.first()->fsync.first()->close.first()->rename.first()
+          </code></pre>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+            if (exists.first()) {
+              delete.first();
+            } else if (exists.new()) {
+              if (exist()) {
+                delete.new();
+              } else {
+                rename.new();
+              }
+            }
+          </code></pre>
           <aside class="notes">
             <div>ACID</div>
             <div><b>Durability</b> - guarantees that once a transaction has been committed, it will remain committed even in the case of a system failure</div>
@@ -274,10 +294,55 @@
         <section>
           <h3>Performance <span class="emphasis">gap</span></h3>
           <div class="timeline" data-timeline="step-6" style="padding: 0 1em; margin-bottom: 1em;"></div>
+          <pre class="fragment" style="width: 100%; position: absolute;"><code data-trim data-noescape>
+            class Database {
+              removeCollections() {
+                const promises = this.getCollections().map((collection) => {
+                  return this.remove(collection);
+                });
+
+                return Promise.all(promises);
+              }
+            }
+          </code></pre>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+            class Database {
+              removeCollections() {
+                const collections = this.getCollections();
+
+                function removeBucket() {
+                  const bucket = collections.splice(0, 5);
+
+                  return Promise.all(bucket.map(this.remove, this)).then((() => {
+                    if (collections.length === 0) { resolve(); }
+                  }));
+                }
+
+                return removeBucket();
+              }
+            }
+          </code></pre>
+          <aside class="notes">
+            At some point we realized that multipl FS IOs are extremely slow. UV_THREADPOOL_SIZE is by default "4". On practice - it appeared that "5" is most reasonable (perhaps, because of other async IOs).
+          </aside>
         </section>
         <section>
           <h3>Directory <span class="emphasis">fsync</span></h3>
           <div class="timeline" data-timeline="step-7" style="padding: 0 1em; margin-bottom: 1em;"></div>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+            open.first()->write.first()->fsync.first()->close.first()->rename.first()
+          </code></pre>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+            mkdir()
+            ->open.first()->write.first()->fsync.first()->close.first()->rename.first()
+          </code></pre>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+            mkdir()->fsync.dir()
+            ->open.first()->write.first()->fsync.first()->close.first()->rename.first()
+          </code></pre>
+          <aside class="notes">
+            Do you remember durability and fsync? Of course, before writing any file we create a directory.
+          </aside>
         </section>
         <section>
           <h3>fsync <span class="emphasis">fsync</span> fsync</h3>
