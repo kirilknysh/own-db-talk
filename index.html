@@ -26,7 +26,7 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>
+				<section class="center">
           <h1>How to build your <span class="emphasis">own database</span></h1>
           <h3>and never ever repeat this <span class="emphasis">mistake</span></h3>
           <p style="font-size: .8em;">by <a href="https://kirilknysh.github.io/">Kiril Knysh</a></p>
@@ -34,7 +34,7 @@
             Landing
           </aside>
         </section>
-        <section>
+        <section class="center">
           <p>
             <h3><span class="emphasis">What</span></h3>
             <ul>
@@ -57,7 +57,7 @@
           </aside>
         </section>
         <section>
-          <section>
+          <section class="center">
             <h3>Sounds easy</h3>
             <div class="fragment">if you have <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a> (JS)</div>
             <div class="fragment"><a href="https://msdn.microsoft.com/en-us/library/dd321424(v=vs.110).aspx">Task&lt;T&gt;</a> (C#)</div>
@@ -66,9 +66,9 @@
               Promise - is a ...
             </aside>
           </section>
-          <section>
+          <section class="center">
             <h3>File system <span class="emphasis">queue</span></h3>
-            <pre style="width: 100%;"><code data-trim data-noescape>
+            <pre style="width: 100%;" class="javascript"><code data-trim data-noescape>
               class Database {
                 constructor() {
                   this.fileSystemQueue[fileName] = Promise.resolve();
@@ -84,9 +84,9 @@
               }
             </code></pre>
           </section>
-          <section>
+          <section class="center">
             <h3>Usage <span class="emphasis">example</span></h3>
-            <pre style="width: 100%;"><code data-trim data-noescape>
+            <pre style="width: 100%;" class="javascript"><code data-trim data-noescape>
               const db = new Database();
 
               db.read()
@@ -100,9 +100,9 @@
                 });
             </code></pre>
           </section>
-          <section>
+          <section class="center">
             <h3>File system <span class="emphasis">structure</span></h3>
-            <pre style="width: 100%;"><code data-trim data-noescape class="nohighlight">
+            <pre style="width: 100%;"><code data-trim data-noescape class="nohighlight hljs">
               data
                 |
                 |-- base-0
@@ -116,7 +116,7 @@
             </code></pre>
           </section>
         </section>
-        <section>
+        <section class="center">
           <h3><span class="emphasis">Timeline</span></h3>
           <div class="timeline" data-timeline="full" style="padding: 0 1em; height: 40vh;"></div>
           <aside class="notes">
@@ -144,7 +144,7 @@
         <section>
           <h3>File system queue <span class="emphasis">memory leak</span></h3>
           <div class="timeline" data-timeline="step-2" style="padding: 0 1em; margin-bottom: 1em;"></div>
-          <pre class="fragment current-visible" style="width: 100%; position: absolute;"><code data-trim data-noescape>
+          <pre class="fragment current-visible javascript" style="width: 100%; position: absolute;"><code data-trim data-noescape>
             class Database {
               constructor() {
                 this.fileSystemQueue[fileName] = Promise.resolve();
@@ -159,7 +159,7 @@
               }
             }
           </code></pre>
-          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+          <pre class="fragment javascript" style="width: 100%;"><code data-trim data-noescape>
             class Database {
               constructor() {
                 this.fileSystemQueue[fileName] = Promise.resolve();
@@ -170,7 +170,7 @@
                   // read content of fileName
                 });
 
-                this.fileSystemQueue[fileName] = promise.then(noop, noop);
+                this.fileSystemQueue[fileName] = <mark>promise.then(noop, noop);</mark>
 
                 return promise;
               }
@@ -183,7 +183,7 @@
         <section>
           <h3>Atomicity (<span class="emphasis">A</span>CID)</h3>
           <div class="timeline" data-timeline="step-3" style="padding: 0 1em; margin-bottom: 1em;"></div>
-          <pre class="fragment" style="width: 100%; position: absolute;"><code data-trim data-noescape>
+          <pre class="fragment javascript" style="width: 100%; position: absolute;"><code data-trim data-noescape>
             const db = new Database();
 
             db.read().then((data) => { // { prop: 0 }
@@ -197,7 +197,7 @@
 
             db.read(); <span class="fragment">// { prop: -5 }</span>
           </code></pre>
-          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+          <pre class="fragment javascript" style="width: 100%;"><code data-trim data-noescape>
             const db = new Database();
 
             db.atomic((atomicDb) => {
@@ -227,7 +227,7 @@
         <section>
           <h3>Sub-folders support (AC<span class="emphasis">I</span>D)</h3>
           <div class="timeline" data-timeline="step-4" style="padding: 0 1em; margin-bottom: 1em;"></div>
-          <pre class="fragment current-visible" style="width: 100%; position: absolute;"><code data-trim data-noescape class="nohighlight">
+          <pre class="fragment current-visible" style="width: 100%; position: absolute;"><code data-trim data-noescape class="nohighlight hljs">
             data
               |
               |-- base-0
@@ -239,7 +239,7 @@
                     |
                     |-- collection-1-0.json
           </code></pre>
-          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape class="nohighlight">
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape class="nohighlight hljs">
             data
               |
               |-- base-0
@@ -266,16 +266,16 @@
         <section>
           <h3>Atomic write (ACI<span class="emphasis">D</span>)</h3>
           <div class="timeline" data-timeline="step-5" style="padding: 0 1em; margin-bottom: 1em;"></div>
-          <pre style="width: 100%;"><code data-trim data-noescape>
+          <pre style="width: 100%;"><code data-trim data-noescape class="nohighlight hljs">
             open()->write()->fsync()->close()
           </code></pre>
-          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape class="nohighlight hljs">
             open.new()->write.new()->fsync.new()->close.new()->delete()->rename.new()
           </code></pre>
-          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape class="nohighlight hljs">
             open.first()->write.first()->fsync.first()->close.first()->rename.first()
           </code></pre>
-          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+          <pre class="fragment javascript" style="width: 100%;"><code data-trim data-noescape>
             if (exists.first()) {
               delete.first();
             } else if (exists.new()) {
@@ -294,7 +294,7 @@
         <section>
           <h3>Performance <span class="emphasis">gap</span></h3>
           <div class="timeline" data-timeline="step-6" style="padding: 0 1em; margin-bottom: 1em;"></div>
-          <pre class="fragment" style="width: 100%; position: absolute;"><code data-trim data-noescape>
+          <pre class="fragment javascript" style="width: 100%; position: absolute;"><code data-trim data-noescape>
             class Database {
               removeCollections() {
                 const promises = this.getCollections().map((collection) => {
@@ -305,7 +305,7 @@
               }
             }
           </code></pre>
-          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+          <pre class="fragment javascript" style="width: 100%;"><code data-trim data-noescape>
             class Database {
               removeCollections() {
                 const collections = this.getCollections();
@@ -329,15 +329,15 @@
         <section>
           <h3>Directory <span class="emphasis">fsync</span></h3>
           <div class="timeline" data-timeline="step-7" style="padding: 0 1em; margin-bottom: 1em;"></div>
-          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape class="nohighlight hljs">
             open.first()->write.first()->fsync.first()->close.first()->rename.first()
           </code></pre>
-          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape class="nohighlight hljs">
             mkdir()
             ->open.first()->write.first()->fsync.first()->close.first()->rename.first()
           </code></pre>
-          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
-            mkdir()->fsync.dir()
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape class="nohighlight hljs">
+            mkdir()-><mark>fsync.dir()</mark>
             ->open.first()->write.first()->fsync.first()->close.first()->rename.first()
           </code></pre>
           <aside class="notes">
@@ -347,7 +347,7 @@
         <section>
           <h3>fsync <span class="emphasis">fsync</span> fsync</h3>
           <div class="timeline" data-timeline="step-8" style="padding: 0 1em; margin-bottom: 1em;"></div>
-          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+          <pre class="fragment javascript" style="width: 100%;"><code data-trim data-noescape>
             const db = new DatabaseStream('streams');
 
             db.startWrite('buffer-0')
@@ -361,11 +361,11 @@
                 return db.endWrite('buffer-0');
               });
           </code></pre>
-          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape class="nohighlight hljs">
             create.stream()->write.stream()->write.stream()->end.stream()
           </code></pre>
-          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
-            create.stream()->write.stream()->write.stream()->fsync.stream()->end.stream()
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape class="nohighlight hljs">
+            create.stream()->write.stream()->write.stream()-><mark>fsync.stream()</mark>->end.stream()
           </code></pre>
           <aside class="notes">
             Streams - one of the required features.
@@ -374,7 +374,7 @@
         <section>
           <h3><span class="emphasis">Memo</span>izing</h3>
           <div class="timeline" data-timeline="step-9" style="padding: 0 1em; margin-bottom: 1em;"></div>
-          <pre class="fragment current-visible" style="width: 100%; position: absolute;"><code data-trim data-noescape>
+          <pre class="fragment current-visible javascript" style="width: 100%; position: absolute;"><code data-trim data-noescape>
             class Database {
               read() {
                 const promise = this.fileSystemQueue[fileName].then(() => {
@@ -387,7 +387,7 @@
               }
             }
           </code></pre>
-          <pre class="fragment current-visible" style="width: 100%; position: absolute;"><code data-trim data-noescape>
+          <pre class="fragment current-visible javascript" style="width: 100%; position: absolute;"><code data-trim data-noescape>
             class Database {
               read() {
                 const promise = this.fileSystemQueue[fileName].then(() => {
@@ -406,7 +406,7 @@
               }
             }
           </code></pre>
-          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+          <pre class="fragment javascript" style="width: 100%;"><code data-trim data-noescape>
             class Database {
               write(content) {
                 const promise = this.fileSystemQueue[fileName].then(() => {
@@ -427,22 +427,22 @@
         <section>
           <h3>fsync <span class="emphasis">fsync</span> fsync fsync <span class="emphasis">fsync</span> <span class="emphasis">fsync</span></h3>
           <div class="timeline" data-timeline="step-10" style="padding: 0 1em; margin-bottom: 1em;"></div>
-          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape class="nohighlight hljs">
             open.new()->write.new()->fsync.new()->close.new()->delete()->rename.new()
           </code></pre>
-          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape>
+          <pre class="fragment" style="width: 100%;"><code data-trim data-noescape class="nohighlight hljs">
             open.new()->write.new()->fsync.new()->close.new()->delete()->rename.new()
-            ->fsync.dir()
+            -><mark>fsync.dir()</mark>
           </code></pre>
           <aside class="notes">
             Durability... We were thinking that it works but... Rename is not atomic => have to fsync parent directory after rename
           </aside>
         </section>
-        <section>
+        <section class="center">
           <h3>Instead of <span class="emphasis">epilogue</span></h3>
           <video src="assets/never.mp4" autoplay loop muted data-ignore></video>
         </section>
-        <section>
+        <section class="center">
           <div class="emphasis" style="font-size: 8em;">?</div>
         </section>
         <!-- step-0:
@@ -484,11 +484,18 @@
 			// - https://github.com/hakimel/reveal.js#dependencies
 			Reveal.initialize({
         transition: 'slide',
-				history: true,
+        history: true,
+        center: false,
 				dependencies: [
 					{ src: 'plugin/zoom-js/zoom.js', async: true },
 					{ src: 'plugin/notes/notes.js', async: true },
-					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+					{
+            src: 'plugin/highlight/highlight.js',
+            async: true,
+            callback: () => {
+              hljs.initHighlightingOnLoad();
+            }
+          }
 				]
 			});
     </script>
